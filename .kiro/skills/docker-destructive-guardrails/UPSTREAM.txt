@@ -1,0 +1,6 @@
+repo: https://github.com/docker/skills
+path: skills/docker-destructive-guardrails
+commit: 3e1cbd179989c2c193f3e4e6553a655907c2003b
+license: Apache-2.0  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

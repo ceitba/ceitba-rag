@@ -1,0 +1,6 @@
+repo: https://github.com/OWASP/secure-agent-playbook
+path: plugins/ai-security-skills/skills/llm-risk-assess
+commit: 1b5fd4cff76075feb56d61ee2985e82516f8c53b
+license: CC-BY-4.0  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

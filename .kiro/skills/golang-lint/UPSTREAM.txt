@@ -1,0 +1,6 @@
+repo: https://github.com/samber/cc-skills-golang
+path: skills/golang-lint
+commit: 8e899e20ff0cd4dc524af3993e4c62d8ee8c5717
+license: MIT  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

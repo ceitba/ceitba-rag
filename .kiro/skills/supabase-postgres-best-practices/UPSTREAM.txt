@@ -1,0 +1,6 @@
+repo: https://github.com/supabase/agent-skills
+path: skills/supabase-postgres-best-practices
+commit: 544bfc56c89afe2b87b20017a59b2c6e9502a1fb
+license: MIT  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

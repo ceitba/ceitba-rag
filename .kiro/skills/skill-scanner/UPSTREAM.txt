@@ -1,0 +1,6 @@
+repo: https://github.com/getsentry/skills
+path: skills/skill-scanner
+commit: d18b7aa8ba878354e5c348310230e652f7690f9c
+license: Apache-2.0  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

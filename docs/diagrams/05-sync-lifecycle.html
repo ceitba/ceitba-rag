@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Source file sync lifecycle · ceitba-rag</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1200px; width: 100%; min-width: 0; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--color-muted);
+      max-width: 72ch;
+      margin-bottom: 1.5rem;
+    }
+    .subtitle code { font-family: var(--font-mono); font-size: 0.8rem; }
+
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">State machine · Sync lifecycle</p>
+    <h1>Source file sync lifecycle</h1>
+    <p class="subtitle">Triggers: weekly cron (Sun 03:00 ART); owner force-sync (own sources, cooldown default 7 days); admin force-sync (any/all). Responses <code>202</code>, <code>409</code> (run in flight), <code>429</code> + <code>Retry-After</code> (ADR 0012).</p>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sync-lifecycle-title sync-lifecycle-desc">
+        <title id="sync-lifecycle-title">Source file sync lifecycle</title>
+        <desc id="sync-lifecycle-desc">Sync lifecycle of a source file: first seen it becomes active; unchanged upstream keys are skipped, changed content is reprocessed and returns to active; a file missing upstream becomes stale, returns to active if it reappears, or is deleted after N weeks and its unreferenced blobs are garbage-collected.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Transitions (drawn before states) -->
+        <line x1="86" y1="280" x2="176" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="97" y="260" width="68" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="131" y="269" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">FIRST SEEN</text>
+        <path d="M 232,248 V 216 Q 232,208 240,208 H 272 Q 280,208 280,216 V 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="214" y="188" width="84" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="256" y="197" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KEY UNCHANGED</text>
+        <rect x="234" y="174" width="44" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="256" y="183" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">(skip)</text>
+        <path d="M 304,248 V 160 Q 304,152 312,152 H 496" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="354" y="132" width="100" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="404" y="141" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">&amp; SHA256 CHANGED</text>
+        <rect x="354" y="118" width="100" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="404" y="127" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">UPSTREAM CHANGED</text>
+        <path d="M 560,184 V 272 Q 560,280 552,280 H 336" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="408" y="288" width="72" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="444" y="297" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">STAGES DONE</text>
+        <path d="M 304,312 V 392 Q 304,400 312,400 H 496" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+        <rect x="354" y="380" width="100" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="404" y="389" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">MISSING UPSTREAM</text>
+        <path d="M 496,424 H 248 Q 240,424 240,416 V 312" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="340" y="432" width="64" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="372" y="441" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">REAPPEARS</text>
+        <line x1="656" y1="408" x2="736" y2="408" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="670" y="388" width="52" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="696" y="397" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">N WEEKS</text>
+        <line x1="808" y1="440" x2="808" y2="500" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="744" y="456" width="56" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="794" y="465" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.06em">GC BLOBS</text>
+        <rect x="680" y="470" width="120" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="794" y="479" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.04em">no longer referenced</text>
+        <!-- Start / end -->
+        <circle cx="80" cy="280" r="6" fill="#2d3142"/>
+        <circle cx="808" cy="508" r="8" fill="none" stroke="#2d3142" stroke-width="1.2"/>
+        <circle cx="808" cy="508" r="5" fill="#2d3142"/>
+        <!-- States -->
+        <rect x="176" y="248" width="160" height="64" rx="8" fill="#f5f5f5"/>
+        <rect x="176" y="248" width="160" height="64" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="256" y="278" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">active</text>
+        <text x="256" y="294" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">indexed · searchable</text>
+        <rect x="496" y="120" width="160" height="64" rx="8" fill="#f5f5f5"/>
+        <rect x="496" y="120" width="160" height="64" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="576" y="150" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">reprocess</text>
+        <text x="576" y="166" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">stage jobs re-run</text>
+        <rect x="496" y="376" width="160" height="64" rx="8" fill="#f5f5f5"/>
+        <rect x="496" y="376" width="160" height="64" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <text x="576" y="406" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">stale</text>
+        <text x="576" y="422" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">listed with warning</text>
+        <rect x="736" y="376" width="144" height="64" rx="8" fill="#f5f5f5"/>
+        <rect x="736" y="376" width="144" height="64" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="808" y="406" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">deleted</text>
+        <text x="808" y="422" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">awaiting GC</text>
+        <!-- Legend -->
+        <line x1="40" y1="532" x2="920" y2="532" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="548" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="564" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="60" y="572" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">State</text>
+        <rect x="116" y="564" width="14" height="10" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <text x="136" y="572" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Soft-delete state (focal)</text>
+        <circle cx="291" cy="569" r="5" fill="#2d3142"/>
+        <text x="304" y="572" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Start</text>
+        <circle cx="367" cy="569" r="6" fill="none" stroke="#2d3142" stroke-width="1"/><circle cx="367" cy="569" r="3.5" fill="#2d3142"/>
+        <text x="380" y="572" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">End</text>
+        <line x1="432" y1="569" x2="460" y2="569" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <text x="468" y="572" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Transition · event</text>
+        <line x1="580" y1="569" x2="608" y2="569" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+        <text x="616" y="572" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Path into soft delete</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

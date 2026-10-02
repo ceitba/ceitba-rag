@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ceitba-rag containers · ceitba-rag</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1280px; width: 100%; min-width: 0; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--color-muted);
+      max-width: 72ch;
+      margin-bottom: 1.5rem;
+    }
+    .subtitle code { font-family: var(--font-mono); font-size: 0.8rem; }
+
+    svg { width: 100%; min-width: 1280px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · Containers</p>
+    <h1>ceitba-rag containers</h1>
+    <p class="subtitle">Go query-api on the hot path, Python workers for ingestion (ADR 0002); Postgres also holds the job queue (ADR 0009), Garage the content-addressed mirror (ADR 0010), Valkey the exact cache and rate limits (ADR 0013, 0014).</p>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="containers-title containers-desc">
+        <title id="containers-title">ceitba-rag containers</title>
+        <desc id="containers-desc">Container view: inside one VPS running Docker Compose, the Go query-api serves the CEITBA backend using Postgres, Valkey and Garage plus external model APIs, while the Python workers use Postgres, Garage and unoserver, pull from Drive, OneDrive and GitHub, call the OCR batch API and read the CEITBA backend.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Zone: VPS (drawn first) -->
+        <rect x="232" y="104" width="712" height="520" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="244" y="108" width="120" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="304" y="117" fill="rgba(45,49,66,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">VPS · DOCKER COMPOSE</text>
+        <!-- Arrows (drawn before nodes) -->
+        <path d="M 120,336 V 172 Q 120,164 128,164 H 480" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <path d="M 480,188 H 352 Q 344,188 344,196 V 336" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="536" y1="208" x2="536" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="736" y1="208" x2="736" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="760" y1="176" x2="1000" y2="176" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <line x1="568" y1="528" x2="568" y2="400" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="704" y1="528" x2="704" y2="400" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 720,544 H 856 Q 864,544 864,536 V 400" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 720,560 H 960 Q 968,560 968,552 V 472 Q 968,464 976,464 H 1000" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <line x1="720" y1="576" x2="1000" y2="576" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <path d="M 480,560 H 128 Q 120,560 120,552 V 400" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <!-- Nodes -->
+        <rect x="40" y="336" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="336" width="160" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="48" y="342" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+        <text x="62" y="351" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+        <text x="120" y="372" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">CEITBA backend</text>
+        <text x="120" y="388" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Spring</text>
+        <rect x="480" y="144" width="280" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="480" y="144" width="280" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <rect x="488" y="150" width="28" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+        <text x="502" y="159" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GO</text>
+        <text x="620" y="180" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">query-api</text>
+        <text x="620" y="196" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">parse · search · rerank · sign · force-sync</text>
+        <rect x="264" y="336" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="264" y="336" width="160" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="272" y="342" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="286" y="351" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">KV</text>
+        <text x="344" y="372" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Valkey</text>
+        <text x="344" y="388" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">cache · rate limits</text>
+        <rect x="480" y="336" width="144" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="480" y="336" width="144" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="488" y="342" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="502" y="351" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SQL</text>
+        <text x="552" y="372" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Postgres</text>
+        <text x="552" y="388" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">pgvector · BM25 · jobs</text>
+        <rect x="648" y="336" width="144" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="648" y="336" width="144" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="656" y="342" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="670" y="351" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">S3</text>
+        <text x="720" y="372" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Garage</text>
+        <text x="720" y="388" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">blobs · OCR JSON</text>
+        <rect x="808" y="336" width="112" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="808" y="336" width="112" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="816" y="342" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="830" y="351" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SVC</text>
+        <text x="864" y="372" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">unoserver</text>
+        <text x="864" y="388" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">LibreOffice</text>
+        <rect x="480" y="528" width="240" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="480" y="528" width="240" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="488" y="534" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="502" y="543" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PY</text>
+        <text x="600" y="564" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">workers</text>
+        <text x="600" y="580" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Procrastinate jobs</text>
+        <rect x="1000" y="144" width="240" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="1000" y="144" width="240" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="1008" y="150" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+        <text x="1022" y="159" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+        <text x="1120" y="180" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Model APIs</text>
+        <text x="1120" y="196" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">embedding · rerank · parser</text>
+        <rect x="1000" y="432" width="240" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="1000" y="432" width="240" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="1008" y="438" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+        <text x="1022" y="447" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+        <text x="1120" y="468" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Drive · OneDrive · GitHub</text>
+        <text x="1120" y="484" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">upstream sources</text>
+        <rect x="1000" y="544" width="240" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="1000" y="544" width="240" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="1008" y="550" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+        <text x="1022" y="559" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+        <text x="1120" y="580" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">OCR batch API</text>
+        <text x="1120" y="596" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">VLM transcription</text>
+        <!-- Legend -->
+        <line x1="40" y1="652" x2="1240" y2="652" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="668" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="684" width="14" height="10" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <text x="60" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Focal · query path</text>
+        <rect x="176" y="684" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="196" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Service</text>
+        <rect x="264" y="684" width="14" height="10" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <text x="284" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Store</text>
+        <rect x="344" y="684" width="14" height="10" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <text x="364" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">External</text>
+        <line x1="440" y1="689" x2="468" y2="689" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <text x="476" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Incoming query</text>
+        <line x1="568" y1="689" x2="596" y2="689" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <text x="604" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">HTTP / external API</text>
+        <line x1="716" y1="689" x2="744" y2="689" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <text x="752" y="692" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Internal (SQL · S3 · cache)</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

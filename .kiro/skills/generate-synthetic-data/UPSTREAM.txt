@@ -1,0 +1,6 @@
+repo: https://github.com/ai-evals-course/evals-skills
+path: skills/generate-synthetic-data
+commit: 80d5f7b0127c7572ed9e9339937adbfd7240ffeb
+license: Apache-2.0  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

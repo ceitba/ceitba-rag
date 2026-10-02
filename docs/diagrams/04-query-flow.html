@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Query flow: POST /v1/search · ceitba-rag</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1280px; width: 100%; min-width: 0; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--color-muted);
+      max-width: 72ch;
+      margin-bottom: 1.5rem;
+    }
+    .subtitle code { font-family: var(--font-mono); font-size: 0.8rem; }
+
+    svg { width: 100%; min-width: 1280px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Sequence · Query flow</p>
+    <h1>Query flow: POST /v1/search</h1>
+    <p class="subtitle">The reranker receives stored transcription excerpts but returns only scores; no model output on the query path is shown to the user or used as instructions. Grammar first, small LLM fallback (ADR 0008); hybrid search + rerank (ADR 0005); exact cache keyed by parsed query + <code>index_version</code> (ADR 0014).</p>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1280 840" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="query-flow-title query-flow-desc">
+        <title id="query-flow-title">Query flow: POST /v1/search</title>
+        <desc id="query-flow-desc">Query sequence: the CEITBA backend posts a search to query-api, which checks rate limits in Valkey, grammar-parses the query with an optional parser-LLM fallback, looks up the exact cache, then either resolves an exact exercise match in Postgres or runs hybrid search plus API reranking, caches the page ids and returns the top-k pages.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Lifelines -->
+        <line x1="104" y1="96" x2="104" y2="752" stroke="rgba(45,49,66,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="296" y1="96" x2="296" y2="752" stroke="rgba(45,49,66,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="488" y1="96" x2="488" y2="752" stroke="rgba(45,49,66,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="760" y1="96" x2="760" y2="752" stroke="rgba(45,49,66,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="960" y1="96" x2="960" y2="752" stroke="rgba(45,49,66,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="1160" y1="96" x2="1160" y2="752" stroke="rgba(45,49,66,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+        <!-- Combined fragments -->
+        <rect x="248" y="256" width="288" height="88" rx="4" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <rect x="248" y="256" width="40" height="16" rx="2" fill="#f5f5f5" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="268" y="268" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">OPT</text>
+        <text x="304" y="288" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.04em">[rule confidence &lt; 0.85]</text>
+        <rect x="448" y="416" width="544" height="208" rx="4" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <rect x="448" y="416" width="40" height="16" rx="2" fill="#f5f5f5" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="468" y="428" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">ALT</text>
+        <text x="500" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.04em">[exact exercise match]</text>
+        <line x1="456" y1="496" x2="984" y2="496" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="500" y="516" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.04em">[else]</text>
+        <!-- Activation bars -->
+        <rect x="484" y="128" width="8" height="572" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="1156" y="176" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="292" y="308" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="1156" y="368" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="756" y="468" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="756" y="540" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="956" y="588" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <rect x="1156" y="644" width="8" height="16" fill="rgba(45,49,66,0.06)" stroke="#4f5d75" stroke-width="0.8"/>
+        <!-- Messages -->
+        <line x1="104" y1="136" x2="484" y2="136" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <rect x="152" y="116" width="96" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="200" y="125" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">POST /V1/SEARCH</text>
+        <rect x="128" y="144" width="144" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="200" y="153" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">{q, filters, k} + user id</text>
+        <line x1="492" y1="184" x2="1156" y2="184" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="1010" y="164" width="100" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1060" y="173" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">RATE LIMIT CHECK</text>
+        <path d="M 492,208 H 520 Q 528,208 528,216 V 224 Q 528,232 520,232 H 496" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="540" y="200" width="84" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="546" y="209" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="start" letter-spacing="0.06em">GRAMMAR PARSE</text>
+        <rect x="540" y="214" width="156" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="546" y="223" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="start" letter-spacing="0.04em">subject · guide · ex · exam</text>
+        <rect x="540" y="228" width="152" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="546" y="237" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="start" letter-spacing="0.04em">year/term + statement text</text>
+        <line x1="484" y1="316" x2="300" y2="316" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <rect x="312" y="296" width="160" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="392" y="305" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ENUM-ONLY STRUCTURED OUTPUT</text>
+        <line x1="492" y1="376" x2="1156" y2="376" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="1004" y="356" width="112" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1060" y="365" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">EXACT CACHE LOOKUP</text>
+        <rect x="980" y="384" width="160" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1060" y="393" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">parsed query + index_version</text>
+        <line x1="492" y1="476" x2="756" y2="476" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="532" y="456" width="184" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="624" y="465" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">EXERCISES → PAGE_EXERCISE_LINKS</text>
+        <line x1="492" y1="548" x2="756" y2="548" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="570" y="528" width="108" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="624" y="537" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">HNSW ∪ BM25 · RRF</text>
+        <rect x="514" y="556" width="220" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="624" y="565" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">halfvec · filters · collapse dup groups</text>
+        <line x1="492" y1="596" x2="956" y2="596" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <rect x="818" y="576" width="84" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="860" y="585" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">RERANK TOP-50</text>
+        <rect x="784" y="604" width="152" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="860" y="613" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">page ids → stored excerpts</text>
+        <line x1="492" y1="652" x2="1156" y2="652" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <rect x="1014" y="632" width="92" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1060" y="641" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">STORE PAGE IDS</text>
+        <line x1="484" y1="692" x2="108" y2="692" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+        <rect x="164" y="672" width="72" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="200" y="681" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">TOP-K PAGES</text>
+        <rect x="108" y="700" width="184" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="200" y="709" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">source_url · mirror_token · page</text>
+        <rect x="140" y="714" width="120" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="200" y="723" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">metadata · dup_count</text>
+        <rect x="122" y="728" width="156" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="200" y="737" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">last_synced_at · disclaimer</text>
+        <!-- Actors (drawn after messages) -->
+        <rect x="32" y="40" width="144" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="32" y="40" width="144" height="56" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="40" y="46" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+        <text x="54" y="55" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+        <text x="104" y="72" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">CEITBA backend</text>
+        <text x="104" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Spring</text>
+        <rect x="224" y="40" width="144" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="224" y="40" width="144" height="56" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="232" y="46" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.20)" stroke-width="0.8"/>
+        <text x="246" y="55" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LLM</text>
+        <text x="296" y="72" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Parser LLM</text>
+        <text x="296" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">fallback only</text>
+        <rect x="416" y="40" width="144" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="416" y="40" width="144" height="56" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <rect x="424" y="46" width="28" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+        <text x="438" y="55" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GO</text>
+        <text x="488" y="72" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">query-api</text>
+        <text x="488" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Go</text>
+        <rect x="688" y="40" width="144" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="688" y="40" width="144" height="56" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="696" y="46" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="710" y="55" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SQL</text>
+        <text x="760" y="72" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Postgres</text>
+        <text x="760" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">pgvector · BM25</text>
+        <rect x="888" y="40" width="144" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="888" y="40" width="144" height="56" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="896" y="46" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+        <text x="910" y="55" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+        <text x="960" y="72" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Reranker API</text>
+        <text x="960" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">scores only</text>
+        <rect x="1088" y="40" width="144" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="1088" y="40" width="144" height="56" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="1096" y="46" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="1110" y="55" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">KV</text>
+        <text x="1160" y="72" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Valkey</text>
+        <text x="1160" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">cache · limits</text>
+        <!-- Legend -->
+        <line x1="40" y1="776" x2="1240" y2="776" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="792" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="808" width="14" height="10" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <text x="60" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Focal · query-api</text>
+        <rect x="168" y="808" width="14" height="10" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <text x="188" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Store</text>
+        <rect x="240" y="808" width="14" height="10" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <text x="260" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">External</text>
+        <rect x="328" y="808" width="14" height="10" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="348" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Optional fallback</text>
+        <rect x="456" y="804" width="28" height="18" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.22)" stroke-width="1"/><text x="462" y="816" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace">ALT</text>
+        <text x="492" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Fragment (OPT · ALT)</text>
+        <line x1="624" y1="813" x2="652" y2="813" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <text x="660" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">HTTP call</text>
+        <line x1="728" y1="813" x2="756" y2="813" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <text x="764" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">SQL / cache call</text>
+        <line x1="856" y1="813" x2="884" y2="813" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+        <text x="892" y="816" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Response (headline)</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

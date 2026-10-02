@@ -1,0 +1,6 @@
+repo: https://github.com/anthropics/skills
+path: skills/skill-creator
+commit: 8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4
+license: Apache-2.0  (upstream LICENSE copied alongside)
+vendored: 2026-10-02
+local-changes: none

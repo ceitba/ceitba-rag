@@ -1,0 +1,35 @@
+# --- Private student data: NEVER track ---
+# Sample/raw student notes are consented for indexing, not for publication.
+/testdata/
+/samples/
+/data/
+*.local.*
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# --- Go ---
+/bin/
+*.test
+*.out
+coverage.*
+# Vendored skill reference doc (not a coverage artifact)
+!/.kiro/skills/golang-testing/references/coverage.md
+
+# --- OS / editors ---
+.DS_Store
+.idea/
+.vscode/
